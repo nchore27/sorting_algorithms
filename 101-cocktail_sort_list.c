@@ -1,73 +1,74 @@
 #include "sort.h"
-
 /**
- * dll_adj_swap - swaps two adjacent nodes of a doubly linked list
- * @list: doubly linked list of integers to be sorted
- * @left: node closer to head, right->prev
- * @right: node closer to tail, left->next
+ * swap - swaps both
+ * @p: first node to swap
+ * @c: second node to swap
+ * @list: list to set null or not
  */
-void dll_adj_swap(listint_t **list, listint_t *left, listint_t *right)
+void swap(listint_t *p, listint_t *c, listint_t **list)
 {
-	listint_t *swap;
-
-	if (left->prev)
-		left->prev->next = right;
+	if (!(p->prev))
+	{
+		p->next = c->next;
+		if (c->next)
+			c->next->prev = p;
+		c->next = p;
+		c->prev = NULL;
+		p->prev = c;
+		*list = c;
+	}
 	else
-		*list = right;
-	if (right->next)
-		right->next->prev = left;
-	right->prev = left->prev;
-	left->prev = right;
-	swap = right;
-	left->next = right->next;
-	swap->next = left;
-
-	print_list(*list);
+	{
+		c->prev->next = c->next;
+		if (c->next)
+			c->next->prev = c->prev;
+		p->prev->next = c;
+		c->prev = p->prev;
+		p->prev = c;
+		c->next = p;
+	}
 }
 
 /**
- * cocktail_sort_list - sorts a doubly linked list of integers in ascending
- * order using an cocktail shaker sort algorithm
- * @list: doubly linked list of integers to be sorted
+ * cocktail_sort_list - inserts right unsorted side into left sorted side
+ * @list: doubly linked list to sort
  */
 void cocktail_sort_list(listint_t **list)
 {
-	bool swapped_f, swapped_b;
-	int shake_range = 1000000, checks;
-	listint_t *temp;
+	listint_t *c, *nextnode;
+	int swapped;
 
-	if (!list || !(*list) || !(*list)->next)
+	if (list == NULL || !(*list) || (*list)->next == NULL)
 		return;
 
-	temp = *list;
+	c = (*list);
 	do {
-		swapped_f = swapped_b = false;
-		for (checks = 0; temp->next && checks < shake_range; checks++)
+		swapped = 0;
+		while (c->next)
 		{
-			if (temp->next->n < temp->n)
+			nextnode = c->next;
+			if (nextnode && c->n > nextnode->n)
 			{
-				dll_adj_swap(list, temp, temp->next);
-				swapped_f = true;
+				swap(c, nextnode, list);
+				swapped = 1;
+				print_list((*list));
 			}
 			else
-				temp = temp->next;
+				c = c->next;
 		}
-		if (!temp->next)  /* first loop, measuring list */
-			shake_range = checks;
-		if (swapped_f)
-			temp = temp->prev;
-		shake_range--;
-		for (checks = 0; temp->prev && checks < shake_range; checks++)
+		c = c->prev;
+		while (c->prev)
 		{
-			if (temp->n < temp->prev->n)
+			nextnode = c->prev;
+			if (nextnode && c->n < nextnode->n)
 			{
-				dll_adj_swap(list, temp->prev, temp);
-				swapped_b = true;
+				swap(nextnode, c, list);
+				swapped = 1;
+				print_list((*list));
 			}
 			else
-				temp = temp->prev;
+				c = c->prev;
 		}
-		if (swapped_b)
-			temp = temp->next;
-	} while (swapped_f || swapped_b);
+		c = c->next;
+	} while (swapped);
 }
