@@ -1,128 +1,112 @@
 #include "deck.h"
 
-
 /**
- * cmpDeckNode - compares two deck nodes
- * @c1: deck node one
- * @c2: deck node two
- * Return: 1 if c1 is biigger, 0 if are equal and -1 if c2 is bigger
+ * sort_deck - sorts a deck of card
+ * @deck: doubly linked list to sort
  */
-int cmpDeckNode(deck_node_t *c1, deck_node_t *c2)
+void sort_deck(deck_node_t **deck)
 {
-	int c1Value, c2Value;
+	deck_node_t *curr;
+	size_t len;
+	deck_node_t *one, *two, *three, *four;
 
-	/*compare with kind*/
-	if (c1->card->kind > c2->card->kind)
-		return (1);
-	if (c1->card->kind < c2->card->kind)
-		return (-1);
+	len = list_len_deck(*deck);
 
-	/*if kind is simillar extract value*/
-	if (!strcmp(c1->card->value, "Jack"))
-		c1Value = 11;
-	else if (!strcmp(c1->card->value, "Queen"))
-		c1Value = 12;
-	else if (!strcmp(c1->card->value, "King"))
-		c1Value = 13;
-	else if (!strcmp(c1->card->value, "Ace"))
-		c1Value = 0;
-	else
-		c1Value = atoi(c1->card->value);
-
-	if (!strcmp(c2->card->value, "Jack"))
-		c2Value = 11;
-	else if (!strcmp(c2->card->value, "Queen"))
-		c2Value = 12;
-	else if (!strcmp(c2->card->value, "King"))
-		c2Value = 13;
-	else if (!strcmp(c2->card->value, "Ace"))
-		c2Value = 0;
-	else
-		c2Value = atoi(c2->card->value);
-
-	/*compare value*/
-	if (c1Value > c2Value)
-		return (1);
-	if (c1Value < c2Value)
-		return (-1);
-	return (0);
-}
-
-/**
- * swapnext - swaps a node with the next node in a doubly linked list
- * @current: the current node
- * @head: head of the doubly linked list
- */
-void swapnext(deck_node_t *current, deck_node_t **head)
-{
-	deck_node_t *tmp = NULL;
-
-	tmp = current->next;
-	if (tmp->next)
-		tmp->next->prev = current;
-	if (current->prev)
-		current->prev->next = tmp;
-	else
-		*head = current;
-	current->next = current->next->next;
-	tmp->prev = current->prev;
-	tmp->next = current;
-	current->prev = tmp;
-}
-
-/**
- * swapprev - swaps a node with the previous node in a doubly linked list
- * @current: the current node
- * @head: head of the doubly linked list
- */
-void swapprev(deck_node_t *current, deck_node_t **head)
-{
-	deck_node_t *tmp = NULL;
-
-	tmp = current->prev;
-	if (current->next)
-		current->next->prev = tmp;
-	if (tmp->prev)
-		tmp->prev->next = current;
-	else
-		*head = current;
-
-	current->prev = current->prev->prev;
-	tmp->next = current->next;
-	tmp->prev = current;
-	current->next = tmp;
-}
-
-/**
- * sort_deck - sorts a deck
- * @list: a pointer to the head of the dead to be
- *       sorted
- */
-void sort_deck(deck_node_t **list)
-{
-	bool swaped = true;
-	deck_node_t *current = *list;
-
-	if (!current)
+	if (!deck || !*deck || len < 2)
 		return;
-	while (swaped)
+
+	curr = *deck;
+	while (curr)
 	{
-		swaped = false;
-		while (current->next)
+		if (curr->prev && card_value(curr) < card_value(curr->prev))
 		{
-			if (cmpDeckNode(current, current->next) == 1)
-				swapnext(current, list), swaped = true;
+			one = curr->prev->prev;
+			two = curr->prev;
+			three = curr;
+			four = curr->next;
+
+			two->next = four;
+			if (four)
+				four->prev = two;
+			three->next = two;
+			three->prev = one;
+			if (one)
+				one->next = three;
 			else
-				current = current->next;
+				*deck = three;
+			two->prev = three;
+			curr = *deck;
+			continue;
 		}
-		while (current->prev)
-		{
-			if (cmpDeckNode(current, current->prev) == -1)
-				swapprev(current, list), swaped = true;
-			else
-				current = current->prev;
-		}
-		if (!swaped)
-			return;
+		else
+			curr = curr->next;
 	}
+}
+
+/**
+ * card_value - returns the value of a card
+ * @node: card in a deck
+ *
+ * Return: value between 1 and 52
+ */
+int card_value(deck_node_t *node)
+{
+	char *val[13] = {"Ace", "2", "3", "4", "5", "6",
+		"7", "8", "9", "10", "Jack", "Queen", "King"};
+	char *kinds[4] = {"SPADE", "HEART", "CLUB", "DIAMOND"};
+	int i, kind_val = 0;
+
+	for (i = 1; i <= 13; i++)
+	{
+		if (!_strcmp(node->card->value, val[i - 1]))
+			kind_val = i;
+	}
+
+	for (i = 1; i <= 4; i++)
+	{
+		if (!_strcmp(kinds[node->card->kind], kinds[i - 1]))
+			kind_val = kind_val + (13 * i);
+	}
+
+	return (kind_val);
+}
+
+/**
+ * _strcmp - compares two strings
+ * @s1: first string to compare
+ * @s2: second string to compare
+ *
+ * Return: less than 0 if s1 is less than s2, 0 if they're equal,
+ * more than 0 if s1 is greater than s2
+ */
+int _strcmp(const char *s1, const char *s2)
+{
+	while (*s1 == *s2)
+	{
+		if (*s1 == '\0')
+		{
+			return (0);
+		}
+		s1++;
+		s2++;
+	}
+	return (*s1 - *s2);
+}
+
+/**
+ * list_len_deck - function returns length of list
+ * @list: head of list
+ *
+ * Return: length
+ */
+size_t list_len_deck(deck_node_t *list)
+{
+	size_t len = 0;
+
+	while (list)
+	{
+		len++;
+		list = list->next;
+	}
+	return (len);
 }
